@@ -1,0 +1,2 @@
+ACTION=="add", SUBSYSTEM=="usb", ENV{PRODUCT}=="951/1607/110", RUN+="/usr/local/sbin/mgmt on"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="951/1607/110", RUN+="/usr/local/sbin/mgmt off"

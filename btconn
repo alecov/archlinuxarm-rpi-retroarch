@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -e
+
+: ${TIMEOUT:=5}
+
+[[ ! -e /etc/btconn.conf ]] ||
+source /etc/btconn.conf
+
+status=$(systemctl is-active bluetooth || true)
+[[ $status != active ]] || systemctl stop bluetooth
+
+for device in "${DEVICES[@]}"; do {
+	sed -i '/^\[LinkKey\]$/,/^$/d' /var/lib/bluetooth/*/"$device"/info \
+	1>&- 2>&- || true
+} & done
+wait
+
+[[ $status != active ]] || systemctl start bluetooth
+
+trap 'kill -$$ 1>&- 2>&-' EXIT
+for device in "${DEVICES[@]}"; do {
+	trap 'kill %1 1>&- 2>&-' EXIT
+	exec {fd0}<> <(:) {fd1}<> >(:)
+	bluetoothctl </dev/fd/$fd1 >/dev/fd/$fd0 &
+	eval "exec $fd0</dev/fd/$fd0 $fd1>/dev/fd/$fd1"
+
+	sleep 1
+	echo scan on >&$fd1
+	while true; do
+		echo pair "$device" >&$fd1
+		timeout "$TIMEOUT" bash -e /dev/fd/3 3<<-:: && break
+			while read -u$fd0; do
+				[[ \$REPLY != *"Pairing successful" ]] || break
+			done
+		::
+	done
+	echo trust "$device" >&$fd1
+	while true; do
+		echo connect "$device" >&$fd1
+		timeout "$TIMEOUT" bash -e /dev/fd/3 3<<-:: && break
+			while read -u$fd0; do
+				[[ \$REPLY != *"Connection successful" ]] || break
+			done
+		::
+	done
+} & done
+wait

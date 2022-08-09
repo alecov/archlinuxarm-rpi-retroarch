@@ -1,0 +1,20 @@
+#!/bin/bash
+
+[[ ! -e /etc/mgmt.conf ]] ||
+source /etc/mgmt.conf
+
+case $1 in
+on)
+	[[ -n ${KEY_ON_STOP[@]} ]] && systemctl stop "${KEY_ON_STOP[@]}"
+	[[ -n ${KEY_ON_START[@]} ]] && systemctl start "${KEY_ON_START[@]}"
+	[[ -n ${KEY_ON_RESTART[@]} ]] && systemctl restart "${KEY_ON_RESTART[@]}"
+;;
+
+off)
+	[[ -n ${KEY_OFF_STOP[@]} ]] && systemctl stop "${KEY_OFF_STOP[@]}"
+	[[ -n ${KEY_OFF_START[@]} ]] && systemctl start "${KEY_OFF_START[@]}"
+	[[ -n ${KEY_OFF_RESTART[@]} ]] && systemctl restart "${KEY_OFF_RESTART[@]}"
+;;
+
+*) exit 1;;
+esac

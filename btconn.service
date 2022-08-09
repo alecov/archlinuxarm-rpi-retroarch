@@ -1,0 +1,6 @@
+[Unit]
+Description=Bluetooth auto-pairing service
+Before=bluetooth.target
+
+[Service]
+ExecStart=/usr/local/sbin/btconn
